@@ -5,12 +5,15 @@
 # 学習用画像
 /train_module/Images/
 /train_module/faceImages/
-/train_module/train_data/**/**/*.jpg
+/train_module/train_data/
 
 # 学習済みモデル
 /train_module/model/
 # 学習ログ
 /train_module/Log/
+
+# 推論ログ
+/predict__module/Log/
 
 # キャッシュファイル
 /train_module/__pycache__/

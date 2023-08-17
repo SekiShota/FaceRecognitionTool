@@ -41,14 +41,16 @@ class TrainModel():
         # データセット作成
         data_transforms = {
             'train': transforms.Compose([
-                transforms.GaussianBlur(kernel_size=3),
-                transforms.RandomRotation(degrees=10),
+                # transforms.GaussianBlur(kernel_size=3),
+                # transforms.RandomRotation(degrees=10),
+                transforms.Resize((224, 224)),
                 transforms.ToTensor(),
-                # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ]),
             'val': transforms.Compose([
+                transforms.Resize((224, 224)),
                 transforms.ToTensor(),
-                # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ]),
         }
         image_datasets = {x: datasets.ImageFolder(os.path.join(train_dataset_dir, x),data_transforms[x]) for x in ['train', 'val']}
@@ -67,8 +69,11 @@ class TrainModel():
         # デバイス定義
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         # モデル定義
-        model_ft=timm.create_model("efficientnet_b0", pretrained=False, num_classes=self.categories)
-        model_ft.to(device)
+        # model_ft=timm.create_model("efficientnet_b0", pretrained=False, num_classes=self.categories)
+        model_ft = models.resnet18(pretrained=False)
+        num_features = model_ft.fc.in_features
+        model_ft.fc = nn.Linear(num_features, self.categories)
+        model_ft = model_ft.to(device)
         # 学習用データセット定義
         dataloaders, dataset_sizes=self.make_dataset()
         # 損失関数：クロスエントロピー誤差

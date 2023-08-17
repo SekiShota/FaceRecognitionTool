@@ -8,6 +8,7 @@ import time
 import copy
 import configparser
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 from trainlogger import train_logger
 
@@ -66,7 +67,7 @@ class TrainModel():
         # デバイス定義
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         # モデル定義
-        model_ft=timm.create_model("efficientnet_b0", pretrained=True, num_classes=self.categories)
+        model_ft=timm.create_model("efficientnet_b0", pretrained=False, num_classes=self.categories)
         model_ft.to(device)
         # 学習用データセット定義
         dataloaders, dataset_sizes=self.make_dataset()
@@ -81,6 +82,8 @@ class TrainModel():
         # ベストモデルのパラメータと正解率
         best_model_wts = copy.deepcopy(model_ft.state_dict())
         best_acc = 0.0
+        # ログ記録用の変数
+        history = {"train": [], "val": []}
 
         for epoch in tqdm(range(epochs)):
             self.logger.info('Epoch {}/{}'.format(epoch+1, epochs))
@@ -127,6 +130,8 @@ class TrainModel():
 
                 self.logger.info('{} Loss: {:.4f} Acc: {:.4f}'.format(
                     phase, epoch_loss, epoch_acc))
+                # 損失を記録
+                history[phase].append(epoch_loss)
 
                 # deep copy the model_ft
                 if phase == 'val' and epoch_acc > best_acc:
@@ -141,7 +146,7 @@ class TrainModel():
         # load best model_ft weights
         model_ft.load_state_dict(best_model_wts)
         self.logger.info("train finished.")
-        return model_ft
+        return model_ft,history
 
 def get_config(conf_path, logger):
     """configファイルからパラメータを取得する関数
@@ -179,6 +184,13 @@ def get_config(conf_path, logger):
         logger.warning(configError)
         sys.exit()
 
+def draw_learningcurve(learningcurve_path,history):
+    plt.plot(history['train'], label='learn', c='red')
+    plt.plot(history['val'], label='val', c='blue')
+    plt.xlabel('epoch')
+    plt.ylabel('crossentropy loss')
+    plt.legend()
+    plt.savefig(learningcurve_path)
 
 if __name__=="__main__":
     # ロガー定義
@@ -197,7 +209,7 @@ if __name__=="__main__":
 
     # training
     try:
-        model = Trainner.train_model()
+        model,history = Trainner.train_model()
         # モデル保存 model/YYYYMMDDhhmmss/model.pth
         model_dir=os.path.join("./model",d)
         if not os.path.exists(model_dir):
@@ -205,6 +217,10 @@ if __name__=="__main__":
         model_path=os.path.join(model_dir,"model.pth")
         print(model_path)
         torch.save(model, model_path)
+        # 学習曲線描画
+        learningcurve_path=os.path.join(model_dir,"learning-curve.png")
+        print(learningcurve_path)
+        draw_learningcurve(learningcurve_path=learningcurve_path,history=history)
     except Exception as trainError:
         logger.warning("*** error ***")
         logger.warning(trainError)

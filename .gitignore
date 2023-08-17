@@ -1,0 +1,17 @@
+# 仮想環境
+/.venv/
+/.vscode/
+
+# 学習用画像
+/train_module/Images/
+/train_module/faceImages/
+/train_data*/
+
+# 学習済みモデル
+/train_module/model/
+# 学習ログ
+/train_module/Log/
+
+# キャッシュファイル
+/train_module/__pycache__/
+/predict_module/__pycache__/

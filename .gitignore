@@ -5,7 +5,7 @@
 # 学習用画像
 /train_module/Images/
 /train_module/faceImages/
-/train_module/train_data/
+/train_module/train_data/**/*.jpg
 
 # 学習済みモデル
 /train_module/model/
